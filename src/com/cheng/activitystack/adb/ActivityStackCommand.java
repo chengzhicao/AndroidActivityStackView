@@ -1,17 +1,21 @@
-package com.cheng.activitystack;
+package com.cheng.activitystack.adb;
 
 import javax.swing.tree.DefaultMutableTreeNode;
-import java.io.*;
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-public class AdbUtil {
-
-    public static List<DefaultMutableTreeNode> activityDumps = new ArrayList<>();
+public class ActivityStackCommand {
+    private static List<DefaultMutableTreeNode> activityDumps = new ArrayList<>();
     private static Map<Integer, DefaultMutableTreeNode> nodes = new HashMap<>();
     private static DefaultMutableTreeNode currentNode;
     private static int currentIndent;
 
-    public static void runProcess() {
+    public static List<DefaultMutableTreeNode> getActivityDumps() {
         activityDumps.clear();
         Process pro;
         try {
@@ -23,6 +27,7 @@ public class AdbUtil {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return activityDumps;
     }
 
     private static void out(InputStream in) throws Exception {
@@ -48,13 +53,19 @@ public class AdbUtil {
                 while ((spaceCount < line.length()) && (line.charAt(spaceCount) <= ' ')) {
                     spaceCount++;
                 }
-                addTree(spaceCount, line);
+                createTree(spaceCount, line);
                 System.out.println((spaceCount < 10 ? ("0" + spaceCount) : spaceCount) + ">" + line);
             }
         }
     }
 
-    private static void addTree(int indent, String content) {
+    /**
+     * 生成树
+     *
+     * @param indent
+     * @param content
+     */
+    private static void createTree(int indent, String content) {
         DefaultMutableTreeNode node = new DefaultMutableTreeNode(content.trim());
         if (indent == 0) {
             activityDumps.add(node);
@@ -75,6 +86,12 @@ public class AdbUtil {
         nodes.put(indent, node);
     }
 
+    /**
+     * 获取应插入的父节点
+     *
+     * @param indent
+     * @return
+     */
     private static DefaultMutableTreeNode getParentNode(int indent) {
         if (nodes.containsKey(indent)) {
             return (DefaultMutableTreeNode) nodes.get(indent).getParent();

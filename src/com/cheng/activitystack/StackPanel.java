@@ -1,10 +1,16 @@
 package com.cheng.activitystack;
 
+import com.cheng.activitystack.adb.ActivityStackCommand;
+import com.cheng.activitystack.adb.DeviceService;
+import com.cheng.activitystack.device.Device;
+import com.cheng.activitystack.device.DevicesTableModel;
+import com.cheng.activitystack.device.DeviceCellEditor;
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.actionSystem.*;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.SimpleToolWindowPanel;
 import com.intellij.ui.ScrollPaneFactory;
+import com.intellij.ui.table.JBTable;
 import com.intellij.ui.treeStructure.Tree;
 import com.intellij.util.ui.JBUI;
 import org.jetbrains.annotations.NotNull;
@@ -13,26 +19,35 @@ import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
 import java.awt.*;
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Enumeration;
+import java.util.*;
 import java.util.List;
 
-public class StackPanel extends SimpleToolWindowPanel {
+public class StackPanel extends SimpleToolWindowPanel implements DeviceService.DevicesListener {
     private JPanel noDevicesJPanel;
     private boolean filter;
-    private DefaultMutableTreeNode top;
-    private DefaultMutableTreeNode filterTop;
+    private DefaultMutableTreeNode allTree;
+    private DefaultMutableTreeNode filterTree;
     private List<DefaultMutableTreeNode> filterNode = new ArrayList<>();
 
     public StackPanel(@NotNull Project project) {
         super(true, true);
         setToolbar(createToolbarPanel());
+        DeviceService deviceService = new DeviceService();
+        deviceService.setDevicesListener(this);
+        deviceService.startService();
+        DevicesTableModel devicesTableModel = new DevicesTableModel();
+        JBTable jTable = new JBTable(devicesTableModel);
+        DeviceCellEditor deviceCellEditor = new DeviceCellEditor();
+        jTable.setDefaultRenderer(Object.class, deviceCellEditor);
+        jTable.setDefaultEditor(Object.class, deviceCellEditor);
+        JScrollPane scrollPane1 = ScrollPaneFactory.createScrollPane(jTable);
+//        setContent(scrollPane1);
         updateTree();
     }
 
     private void updateTree() {
-        AdbUtil.runProcess();
-        if (AdbUtil.activityDumps.size() == 0) {
+        List<DefaultMutableTreeNode> activityStack = ActivityStackCommand.getActivityDumps();
+        if (activityStack.size() == 0) {
             if (noDevicesJPanel == null) {
                 noDevicesJPanel = new JPanel(new BorderLayout());
                 noDevicesJPanel.add(new JLabel("no find devices", JLabel.CENTER), BorderLayout.CENTER);
@@ -46,28 +61,27 @@ public class StackPanel extends SimpleToolWindowPanel {
             }
             return;
         }
-        if (top == null) {
-            top = new DefaultMutableTreeNode("top");
+        if (allTree == null) {
+            allTree = new DefaultMutableTreeNode("top");
         }
-        top.removeAllChildren();
-        for (DefaultMutableTreeNode node : AdbUtil.activityDumps) {
-            top.add(node);
+        allTree.removeAllChildren();
+        for (DefaultMutableTreeNode node : activityStack) {
+            allTree.add(node);
         }
         switchTreeView();
     }
 
     private void showFilter() throws IOException, ClassNotFoundException {
-        if (filterTop == null) {
+        if (filterTree == null) {
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             ObjectOutputStream oos = new ObjectOutputStream(outputStream);
-            oos.writeObject(top);
+            oos.writeObject(allTree);
             ByteArrayInputStream inputStream = new ByteArrayInputStream(outputStream.toByteArray());
             ObjectInputStream ois = new ObjectInputStream(inputStream);
-            filterTop = (DefaultMutableTreeNode) ois.readObject();
-            Enumeration enumeration = filterTop.preorderEnumeration();
+            filterTree = (DefaultMutableTreeNode) ois.readObject();
+            Enumeration enumeration = filterTree.preorderEnumeration();
             while (enumeration.hasMoreElements()) {
                 DefaultMutableTreeNode node = (DefaultMutableTreeNode) enumeration.nextElement();
-                System.out.println(node.toString());
                 for (String filterProperty : FilterNode.ALL) {
                     if (node.toString().startsWith(filterProperty)) {
                         filterNode.add(node);
@@ -78,12 +92,12 @@ public class StackPanel extends SimpleToolWindowPanel {
                 node.removeFromParent();
             }
         }
-        Tree tree = new Tree(filterTop);
+        Tree tree = new Tree(filterTree);
         setContent(ScrollPaneFactory.createScrollPane(tree));
     }
 
     private void showAll() {
-        Tree tree = new Tree(top);
+        Tree tree = new Tree(allTree);
         setContent(ScrollPaneFactory.createScrollPane(tree));
     }
 
@@ -95,6 +109,15 @@ public class StackPanel extends SimpleToolWindowPanel {
         return JBUI.Panels.simplePanel(actionToolBar.getComponent());
     }
 
+    @Override
+    public void findDevices(List<Device> devices) {
+//        System.out.println(Thread.currentThread());
+    }
+
+    @Override
+    public void noDevices() {
+
+    }
 
     private class ActivityRefreshAction extends AnAction {
         ActivityRefreshAction() {
@@ -103,7 +126,7 @@ public class StackPanel extends SimpleToolWindowPanel {
 
         @Override
         public void actionPerformed(@NotNull AnActionEvent e) {
-            filterTop = null;
+            filterTree = null;
             updateTree();
         }
     }
@@ -139,5 +162,4 @@ public class StackPanel extends SimpleToolWindowPanel {
             showAll();
         }
     }
-
 }

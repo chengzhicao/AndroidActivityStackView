@@ -8,7 +8,7 @@ import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentManager;
 import org.jetbrains.annotations.NotNull;
 
-public class ActivityStackWindow implements ToolWindowFactory , DumbAware {
+public class ActivityStackWindow implements ToolWindowFactory, DumbAware {
     @Override
     public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
         StackPanel explorer = new StackPanel(project);
