@@ -1,10 +1,21 @@
 package com.cheng.activitystack.device;
 
-import javax.swing.table.DefaultTableModel;
+import javax.swing.table.AbstractTableModel;
+import java.util.ArrayList;
+import java.util.List;
 
-public class DevicesTableModel extends DefaultTableModel {
+public class DevicesTableModel extends AbstractTableModel {
+    private List<Device> devices = new ArrayList<>();
 
-    public DevicesTableModel() {
+    public void updateDevice(List<Device> devices) {
+        this.devices.clear();
+        this.devices.addAll(devices);
+        fireTableDataChanged();
+    }
+
+    @Override
+    public String getColumnName(int column) {
+        return null;
     }
 
     @Override
@@ -14,6 +25,16 @@ public class DevicesTableModel extends DefaultTableModel {
 
     @Override
     public int getRowCount() {
-        return 100;
+        return devices.size();
+    }
+
+    @Override
+    public Object getValueAt(int row, int column) {
+        return devices.get(row);
+    }
+
+    @Override
+    public boolean isCellEditable(int rowIndex, int columnIndex) {
+        return columnIndex == 0;
     }
 }

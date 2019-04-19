@@ -15,11 +15,11 @@ public class ActivityStackCommand {
     private static DefaultMutableTreeNode currentNode;
     private static int currentIndent;
 
-    public static List<DefaultMutableTreeNode> getActivityDumps() {
+    public static List<DefaultMutableTreeNode> getActivityDumps(String deviceId) {
         activityDumps.clear();
         Process pro;
         try {
-            pro = Runtime.getRuntime().exec("adb shell dumpsys activity activities");
+            pro = Runtime.getRuntime().exec("adb -s " + deviceId + " shell dumpsys activity activities");
             out(pro.getInputStream());
 //        out(pro.getErrorStream());
             pro.waitFor();

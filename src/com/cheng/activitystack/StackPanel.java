@@ -22,48 +22,62 @@ import java.io.*;
 import java.util.*;
 import java.util.List;
 
-public class StackPanel extends SimpleToolWindowPanel implements DeviceService.DevicesListener {
-    private JPanel noDevicesJPanel;
+public class StackPanel extends SimpleToolWindowPanel implements DeviceService.DevicesListener, DeviceCellEditor.WatchListener {
+    private JPanel noDevicesPanel;
     private boolean filter;
-    private DefaultMutableTreeNode allTree;
+    private final DefaultMutableTreeNode allTree = new DefaultMutableTreeNode();
+    ;
     private DefaultMutableTreeNode filterTree;
-    private List<DefaultMutableTreeNode> filterNode = new ArrayList<>();
+    private final List<DefaultMutableTreeNode> filterNode = new ArrayList<>();
+    private final DevicesTableModel devicesTableModel = new DevicesTableModel();
+    private final JBTable jTable = new JBTable(devicesTableModel);
+    private JScrollPane devicePanel;
+    private boolean shouldShowDevice = true;
+    private List<Device> devices;
+    private Device currentDevice;
+    private final BackAction backAction = new BackAction();
+    private final RefreshAction refreshAction = new RefreshAction();
+    private final FilterAction filterAction = new FilterAction();
 
     public StackPanel(@NotNull Project project) {
         super(true, true);
         setToolbar(createToolbarPanel());
+        scanDevices();
+        createDevicePanel();
+        createNoDevicePanel();
+//        updateTree();
+    }
+
+    /**
+     * 扫描设备
+     */
+    private void scanDevices() {
         DeviceService deviceService = new DeviceService();
         deviceService.setDevicesListener(this);
         deviceService.startService();
-        DevicesTableModel devicesTableModel = new DevicesTableModel();
-        JBTable jTable = new JBTable(devicesTableModel);
-        DeviceCellEditor deviceCellEditor = new DeviceCellEditor();
-        jTable.setDefaultRenderer(Object.class, deviceCellEditor);
-        jTable.setDefaultEditor(Object.class, deviceCellEditor);
-        JScrollPane scrollPane1 = ScrollPaneFactory.createScrollPane(jTable);
-//        setContent(scrollPane1);
-        updateTree();
+    }
+
+    /**
+     * 设备列表面板
+     */
+    private void createDevicePanel() {
+        DeviceCellEditor deviceCellEditor = new DeviceCellEditor(this);
+        jTable.getColumnModel().getColumn(0).setCellRenderer(deviceCellEditor);
+        jTable.getColumnModel().getColumn(0).setCellEditor(deviceCellEditor);
+        devicePanel = ScrollPaneFactory.createScrollPane(jTable);
+    }
+
+    /**
+     * 无设备面板
+     */
+    private void createNoDevicePanel() {
+        noDevicesPanel = new JPanel(new BorderLayout());
+        noDevicesPanel.add(new JLabel("no find devices", JLabel.CENTER), BorderLayout.CENTER);
     }
 
     private void updateTree() {
-        List<DefaultMutableTreeNode> activityStack = ActivityStackCommand.getActivityDumps();
-        if (activityStack.size() == 0) {
-            if (noDevicesJPanel == null) {
-                noDevicesJPanel = new JPanel(new BorderLayout());
-                noDevicesJPanel.add(new JLabel("no find devices", JLabel.CENTER), BorderLayout.CENTER);
-            }
-            if (getContent() == null) {
-                setContent(noDevicesJPanel);
-            } else {
-                if (getContent() != noDevicesJPanel) {
-                    setContent(noDevicesJPanel);
-                }
-            }
-            return;
-        }
-        if (allTree == null) {
-            allTree = new DefaultMutableTreeNode("top");
-        }
+        List<DefaultMutableTreeNode> activityStack = ActivityStackCommand.getActivityDumps(currentDevice.getId());
+        allTree.setUserObject(currentDevice.getName());
         allTree.removeAllChildren();
         for (DefaultMutableTreeNode node : activityStack) {
             allTree.add(node);
@@ -72,7 +86,7 @@ public class StackPanel extends SimpleToolWindowPanel implements DeviceService.D
     }
 
     private void showFilter() throws IOException, ClassNotFoundException {
-        if (filterTree == null) {
+        if (filterTree == null || !filterTree.getUserObject().equals(allTree.getUserObject())) {
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             ObjectOutputStream oos = new ObjectOutputStream(outputStream);
             oos.writeObject(allTree);
@@ -103,24 +117,68 @@ public class StackPanel extends SimpleToolWindowPanel implements DeviceService.D
 
     private JPanel createToolbarPanel() {
         DefaultActionGroup group = new DefaultActionGroup();
-        group.add(new ActivityRefreshAction());
-        group.add(new ShowAllTargetsAction());
+        group.add(backAction);
+        group.add(refreshAction);
+        group.add(filterAction);
         ActionToolbar actionToolBar = ActionManager.getInstance().createActionToolbar("fwegwef", group, true);
         return JBUI.Panels.simplePanel(actionToolBar.getComponent());
     }
 
     @Override
     public void findDevices(List<Device> devices) {
-//        System.out.println(Thread.currentThread());
+        this.devices = devices;
+        devicesTableModel.updateDevice(devices);
+        if (devices.size() > 0) {
+            if (shouldShowDevice) {
+                if (devicePanel != getContent()) {
+                    setContent(devicePanel);
+                }
+            } else {
+                boolean haveDevice = false;
+                for (Device device : devices) {
+                    if (device.getId().equals(currentDevice.getId())) {
+                        haveDevice = true;
+                        break;
+                    }
+                }
+                if (!haveDevice) {
+                    shouldShowDevice = true;
+                    setContent(devicePanel);
+                }
+            }
+        } else {
+            if (noDevicesPanel != getContent()) {
+                setContent(noDevicesPanel);
+            }
+        }
     }
 
     @Override
-    public void noDevices() {
-
+    public void watch() {
+        shouldShowDevice = false;
+        currentDevice = devices.get(jTable.getEditingRow());
+        updateTree();
     }
 
-    private class ActivityRefreshAction extends AnAction {
-        ActivityRefreshAction() {
+    private class BackAction extends AnAction {
+        BackAction() {
+            super("back", "back", AllIcons.Actions.Back);
+        }
+
+        @Override
+        public void actionPerformed(@NotNull AnActionEvent e) {
+            setContent(devicePanel);
+            shouldShowDevice = true;
+        }
+
+        @Override
+        public void update(@NotNull AnActionEvent e) {
+            e.getPresentation().setEnabled(!shouldShowDevice);
+        }
+    }
+
+    private class RefreshAction extends AnAction {
+        RefreshAction() {
             super("refresh activity", "refresh activity stack", AllIcons.Actions.Refresh);
         }
 
@@ -129,10 +187,15 @@ public class StackPanel extends SimpleToolWindowPanel implements DeviceService.D
             filterTree = null;
             updateTree();
         }
+
+        @Override
+        public void update(@NotNull AnActionEvent e) {
+            e.getPresentation().setEnabled(!shouldShowDevice);
+        }
     }
 
-    private class ShowAllTargetsAction extends ToggleAction {
-        ShowAllTargetsAction() {
+    private class FilterAction extends ToggleAction {
+        FilterAction() {
             super("filter activity", "filter activity view", AllIcons.General.Filter);
         }
 
@@ -146,6 +209,11 @@ public class StackPanel extends SimpleToolWindowPanel implements DeviceService.D
             System.out.println("setSelected..." + flag);
             filter = flag;
             switchTreeView();
+        }
+
+        @Override
+        public void update(@NotNull AnActionEvent e) {
+            e.getPresentation().setEnabled(!shouldShowDevice);
         }
     }
 

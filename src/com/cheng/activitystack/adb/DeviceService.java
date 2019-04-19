@@ -21,7 +21,6 @@ public class DeviceService {
                 try {
                     process = Runtime.getRuntime().exec("adb devices -l");
                     successOut(process.getInputStream());
-                    errorOut(process.getErrorStream());
                     process.waitFor();
                     process.exitValue();
                 } catch (InterruptedException e) {
@@ -31,12 +30,6 @@ public class DeviceService {
                 }
             }
         }, 0, 1000));
-    }
-
-    private void errorOut(InputStream errorStream) {
-        if (devicesListener != null) {
-            ApplicationManager.getApplication().invokeLater(() -> devicesListener.noDevices());
-        }
     }
 
     private void successOut(InputStream in) throws IOException {
@@ -64,7 +57,5 @@ public class DeviceService {
 
     public interface DevicesListener {
         void findDevices(List<Device> devices);
-
-        void noDevices();
     }
 }
