@@ -38,7 +38,7 @@ public class DeviceService {
         String line;
         reader.readLine();
         while ((line = reader.readLine()) != null) {
-            if (!line.equals("")) {
+            if (line.contains("device")) {
                 String id = line.substring(0, line.indexOf(" "));
                 String name = line.substring(line.indexOf("model:") + 6, line.indexOf("device:"));
                 devices.add(new Device(name, id));

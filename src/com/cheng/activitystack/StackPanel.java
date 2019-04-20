@@ -206,7 +206,6 @@ public class StackPanel extends SimpleToolWindowPanel implements DeviceService.D
 
         @Override
         public void setSelected(@NotNull AnActionEvent event, boolean flag) {
-            System.out.println("setSelected..." + flag);
             filter = flag;
             switchTreeView();
         }
