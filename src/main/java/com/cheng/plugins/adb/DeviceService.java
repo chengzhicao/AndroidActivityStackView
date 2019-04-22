@@ -1,51 +1,35 @@
 package com.cheng.plugins.adb;
 
-import com.cheng.plugins.device.Device;
+import com.android.ddmlib.AndroidDebugBridge;
+import com.android.ddmlib.IDevice;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.project.Project;
+import org.jetbrains.android.sdk.AndroidSdkUtils;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 
 public class DeviceService {
+    private AndroidDebugBridge debugBridge;
+
+    public DeviceService(Project project) {
+        debugBridge = AndroidSdkUtils.getDebugBridge(project);
+    }
+
     public void startService() {
         ApplicationManager.getApplication().executeOnPooledThread(() -> new Timer().schedule(new TimerTask() {
             @Override
             public void run() {
-                Process process;
-                try {
-                    process = Runtime.getRuntime().exec("adb devices -l");
-                    successOut(process.getInputStream());
-                    process.waitFor();
-                    process.exitValue();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                ApplicationManager.getApplication().invokeLater(() -> task());
             }
         }, 0, 1000));
     }
 
-    private void successOut(InputStream in) throws IOException {
-        List<Device> devices = new ArrayList<>();
-        BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-        String line;
-        reader.readLine();
-        while ((line = reader.readLine()) != null) {
-            if (line.contains("device ")) {
-                String serialNumber = line.substring(0, line.indexOf(" "));
-                String model = line.substring(line.indexOf("model:") + 6, line.indexOf("device:"));
-                devices.add(new Device(serialNumber, model));
+    private void task() {
+        if (debugBridge != null) {
+            IDevice[] devices = debugBridge.getDevices();
+            if (devicesListener != null) {
+                devicesListener.findDevices(devices);
             }
-        }
-        if (devicesListener != null) {
-            ApplicationManager.getApplication().invokeLater(() -> devicesListener.findDevices(devices));
         }
     }
 
@@ -56,6 +40,6 @@ public class DeviceService {
     }
 
     public interface DevicesListener {
-        void findDevices(List<Device> devices);
+        void findDevices(IDevice[] devices);
     }
 }

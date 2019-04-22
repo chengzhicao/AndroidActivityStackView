@@ -1,15 +1,14 @@
 package com.cheng.plugins.device;
 
+import com.android.ddmlib.IDevice;
+
 import javax.swing.table.AbstractTableModel;
-import java.util.ArrayList;
-import java.util.List;
 
 public class DevicesTableModel extends AbstractTableModel {
-    private List<Device> devices = new ArrayList<>();
+    private IDevice[] devices = new IDevice[0];
 
-    public void updateDevice(List<Device> devices) {
-        this.devices.clear();
-        this.devices.addAll(devices);
+    public void updateDevice(IDevice[] devices) {
+        this.devices = devices;
         fireTableDataChanged();
     }
 
@@ -25,12 +24,12 @@ public class DevicesTableModel extends AbstractTableModel {
 
     @Override
     public int getRowCount() {
-        return devices.size();
+        return devices.length;
     }
 
     @Override
     public Object getValueAt(int row, int column) {
-        return devices.get(row);
+        return devices[row];
     }
 
     @Override

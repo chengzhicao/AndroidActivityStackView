@@ -1,9 +1,14 @@
 package com.cheng.plugins.adb;
 
+import com.android.ddmlib.AdbCommandRejectedException;
+import com.android.ddmlib.IDevice;
+import com.android.ddmlib.ShellCommandUnresponsiveException;
+import com.android.ddmlib.TimeoutException;
+import org.jetbrains.android.util.AndroidOutputReceiver;
+import org.jetbrains.annotations.NotNull;
+
 import javax.swing.tree.DefaultMutableTreeNode;
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -14,49 +19,50 @@ public class ActivityStackCommand {
     private static Map<Integer, DefaultMutableTreeNode> nodes = new HashMap<>();
     private static DefaultMutableTreeNode currentNode;
     private static int currentIndent;
+    private static String temp;
 
-    public static List<DefaultMutableTreeNode> getActivityDumps(String deviceId) {
-        activityDumps.clear();
-        Process pro;
+    public static List<DefaultMutableTreeNode> getActivityDumps2(IDevice device) {
+
         try {
-            pro = Runtime.getRuntime().exec("adb -s " + deviceId + " shell dumpsys activity activities");
-            out(pro.getInputStream());
-//        out(pro.getErrorStream());
-            pro.waitFor();
-            pro.exitValue();
-        } catch (Exception e) {
+            device.executeShellCommand("dumpsys activity activities", new AndroidOutputReceiver() {
+                @Override
+                protected void processNewLine(@NotNull String line) {
+                    if (!line.equals("")) {
+                        if (line.contains("Task id #")) {
+                            temp = line.trim();
+                            return;
+                        }
+                        if (temp != null && line.contains("* TaskRecord")) {
+                            line = line.replace("*", temp);
+                            temp = null;
+                        }
+                        if (line.contains("* Hist #")) {
+                            line = line.replace("* ", "");
+                        }
+                        int spaceCount = 0;
+                        while ((spaceCount < line.length()) && (line.charAt(spaceCount) <= ' ')) {
+                            spaceCount++;
+                        }
+                        createTree(spaceCount, line);
+                        System.out.println((spaceCount < 10 ? ("0" + spaceCount) : spaceCount) + ">" + line);
+                    }
+                }
+
+                @Override
+                public boolean isCancelled() {
+                    return false;
+                }
+            });
+        } catch (TimeoutException e) {
+            e.printStackTrace();
+        } catch (AdbCommandRejectedException e) {
+            e.printStackTrace();
+        } catch (ShellCommandUnresponsiveException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
             e.printStackTrace();
         }
         return activityDumps;
-    }
-
-    private static void out(InputStream in) throws Exception {
-        String line;
-        BufferedReader br = new BufferedReader(
-                new InputStreamReader(in));
-        String temp = null;
-        br.readLine();
-        while ((line = br.readLine()) != null) {
-            if (!line.equals("")) {
-                if (line.contains("Task id #")) {
-                    temp = line.trim();
-                    continue;
-                }
-                if (temp != null && line.contains("* TaskRecord")) {
-                    line = line.replace("*", temp);
-                    temp = null;
-                }
-                if (line.contains("* Hist #")) {
-                    line = line.replace("* ", "");
-                }
-                int spaceCount = 0;
-                while ((spaceCount < line.length()) && (line.charAt(spaceCount) <= ' ')) {
-                    spaceCount++;
-                }
-                createTree(spaceCount, line);
-                System.out.println((spaceCount < 10 ? ("0" + spaceCount) : spaceCount) + ">" + line);
-            }
-        }
     }
 
     private static void createTree(int indent, String content) {

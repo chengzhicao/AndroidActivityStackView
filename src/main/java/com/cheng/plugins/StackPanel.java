@@ -1,8 +1,8 @@
 package com.cheng.plugins;
 
+import com.android.ddmlib.IDevice;
 import com.cheng.plugins.adb.ActivityStackCommand;
 import com.cheng.plugins.adb.DeviceService;
-import com.cheng.plugins.device.Device;
 import com.cheng.plugins.device.DeviceCellEditor;
 import com.cheng.plugins.device.DevicesTableModel;
 import com.intellij.icons.AllIcons;
@@ -33,22 +33,22 @@ public class StackPanel extends SimpleToolWindowPanel implements DeviceService.D
     private final JBTable jTable = new JBTable(devicesTableModel);
     private JScrollPane devicePanel;
     private boolean shouldShowDevice = true;
-    private List<Device> devices;
-    private Device currentDevice;
+    private IDevice[] devices;
+    private IDevice currentDevice;
     private final BackAction backAction = new BackAction();
     private final RefreshAction refreshAction = new RefreshAction();
     private final FilterAction filterAction = new FilterAction();
 
-    public StackPanel(@NotNull Project project) {
+    StackPanel(@NotNull Project project) {
         super(true, true);
         setToolbar(createToolbarPanel());
-        scanDevices();
+        scanDevices(project);
         createDevicePanel();
         createNoDevicePanel();
     }
 
-    private void scanDevices() {
-        DeviceService deviceService = new DeviceService();
+    private void scanDevices(Project project) {
+        DeviceService deviceService = new DeviceService(project);
         deviceService.setDevicesListener(this);
         deviceService.startService();
     }
@@ -66,8 +66,8 @@ public class StackPanel extends SimpleToolWindowPanel implements DeviceService.D
     }
 
     private void refreshTree() {
-        List<DefaultMutableTreeNode> activityStack = ActivityStackCommand.getActivityDumps(currentDevice.getSerialNumber());
-        allTree.setUserObject(currentDevice);
+        List<DefaultMutableTreeNode> activityStack = ActivityStackCommand.getActivityDumps2(currentDevice);
+        allTree.setUserObject(currentDevice.isEmulator() ? currentDevice.getAvdName() : currentDevice.getProperty(IDevice.PROP_DEVICE_MODEL));
         allTree.removeAllChildren();
         for (DefaultMutableTreeNode node : activityStack) {
             allTree.add(node);
@@ -102,7 +102,7 @@ public class StackPanel extends SimpleToolWindowPanel implements DeviceService.D
 
     private void showAll() {
         Tree tree = new Tree(allTree);
-        tree.setCellRenderer((tree1, value, selected, expanded, leaf, row, hasFocus) -> new JLabel(value.toString()));
+//        tree.setCellRenderer((tree1, value, selected, expanded, leaf, row, hasFocus) -> new JLabel(value.toString()));
         setContent(ScrollPaneFactory.createScrollPane(tree));
     }
 
@@ -116,17 +116,17 @@ public class StackPanel extends SimpleToolWindowPanel implements DeviceService.D
     }
 
     @Override
-    public void findDevices(List<Device> devices) {
+    public void findDevices(IDevice[] devices) {
         this.devices = devices;
         devicesTableModel.updateDevice(devices);
-        if (devices.size() > 0) {
+        if (devices.length > 0) {
             if (shouldShowDevice) {
                 if (devicePanel != getContent()) {
                     setContent(devicePanel);
                 }
             } else {
                 boolean haveDevice = false;
-                for (Device device : devices) {
+                for (IDevice device : devices) {
                     if (device.getSerialNumber().equals(currentDevice.getSerialNumber())) {
                         haveDevice = true;
                         break;
@@ -147,8 +147,10 @@ public class StackPanel extends SimpleToolWindowPanel implements DeviceService.D
     @Override
     public void watch() {
         shouldShowDevice = false;
-        currentDevice = devices.get(jTable.getEditingRow());
-        refreshTree();
+        currentDevice = devices[jTable.getEditingRow()];
+        if (currentDevice.isOnline()) {
+            refreshTree();
+        }
     }
 
     private class BackAction extends AnAction {

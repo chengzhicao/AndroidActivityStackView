@@ -1,5 +1,6 @@
 package com.cheng.plugins.device;
 
+import com.android.ddmlib.IDevice;
 import com.intellij.ui.JBColor;
 import com.intellij.util.ui.JBUI;
 
@@ -19,7 +20,7 @@ public class DeviceCellEditor extends AbstractCellEditor
 
     @Override
     public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
-        return new WatchPanel((Device) value);
+        return new WatchPanel((IDevice) value);
     }
 
     @Override
@@ -29,18 +30,27 @@ public class DeviceCellEditor extends AbstractCellEditor
 
     @Override
     public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-        return new WatchPanel((Device) value);
+        return new WatchPanel((IDevice) value);
     }
 
     private class WatchPanel extends JPanel {
-        private WatchPanel(Device device) {
+        private WatchPanel(IDevice device) {
             setLayout(new BorderLayout());
             JPanel jPanel = new JPanel(new BorderLayout());
-            JLabel labModel = new JLabel(device.getModel());
-            jPanel.add(labModel,BorderLayout.NORTH);
+            String name;
+            if (device.isEmulator()) {
+                name = device.getAvdName();
+            } else {
+                name = device.getProperty(IDevice.PROP_DEVICE_MODEL);
+            }
+            if (!device.isOnline()) {
+                name = String.format("<html>%s <nobr style=\"font-weight:bold;\">[%s]</nobr></html>", name, device.getState());
+            }
+            JLabel labModel = new JLabel(name);
+            jPanel.add(labModel, BorderLayout.NORTH);
             JLabel labSerialNumber = new JLabel(device.getSerialNumber());
             labSerialNumber.setForeground(JBColor.GRAY);
-            jPanel.add(labSerialNumber,BorderLayout.SOUTH);
+            jPanel.add(labSerialNumber, BorderLayout.SOUTH);
             JButton btnWatch = new JButton("Watch");
             btnWatch.addActionListener(e -> {
                 if (watchListener != null) {
