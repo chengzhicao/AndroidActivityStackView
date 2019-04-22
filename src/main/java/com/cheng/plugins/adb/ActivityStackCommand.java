@@ -1,4 +1,4 @@
-package com.cheng.activitystack.adb;
+package com.cheng.plugins.adb;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 import java.io.BufferedReader;
@@ -59,12 +59,6 @@ public class ActivityStackCommand {
         }
     }
 
-    /**
-     * 生成树
-     *
-     * @param indent
-     * @param content
-     */
     private static void createTree(int indent, String content) {
         DefaultMutableTreeNode node = new DefaultMutableTreeNode(content.trim());
         if (indent == 0) {
@@ -86,12 +80,6 @@ public class ActivityStackCommand {
         nodes.put(indent, node);
     }
 
-    /**
-     * 获取应插入的父节点
-     *
-     * @param indent
-     * @return
-     */
     private static DefaultMutableTreeNode getParentNode(int indent) {
         if (nodes.containsKey(indent)) {
             return (DefaultMutableTreeNode) nodes.get(indent).getParent();

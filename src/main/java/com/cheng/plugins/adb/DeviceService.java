@@ -1,6 +1,6 @@
-package com.cheng.activitystack.adb;
+package com.cheng.plugins.adb;
 
-import com.cheng.activitystack.device.Device;
+import com.cheng.plugins.device.Device;
 import com.intellij.openapi.application.ApplicationManager;
 
 import java.io.BufferedReader;
@@ -38,10 +38,10 @@ public class DeviceService {
         String line;
         reader.readLine();
         while ((line = reader.readLine()) != null) {
-            if (line.contains("device")) {
-                String id = line.substring(0, line.indexOf(" "));
-                String name = line.substring(line.indexOf("model:") + 6, line.indexOf("device:"));
-                devices.add(new Device(name, id));
+            if (line.contains("device ")) {
+                String serialNumber = line.substring(0, line.indexOf(" "));
+                String model = line.substring(line.indexOf("model:") + 6, line.indexOf("device:"));
+                devices.add(new Device(serialNumber, model));
             }
         }
         if (devicesListener != null) {

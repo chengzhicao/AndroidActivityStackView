@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/AndroidActivityStackView.iml" filepath="$PROJECT_DIR$/AndroidActivityStackView.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/AndroidActivityStackView.iml" filepath="$PROJECT_DIR$/.idea/AndroidActivityStackView.iml" />
     </modules>
   </component>
 </project>

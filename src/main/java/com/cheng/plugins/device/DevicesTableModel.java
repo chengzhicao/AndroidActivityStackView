@@ -1,4 +1,4 @@
-package com.cheng.activitystack.device;
+package com.cheng.plugins.device;
 
 import javax.swing.table.AbstractTableModel;
 import java.util.ArrayList;

@@ -1,4 +1,4 @@
-package com.cheng.activitystack;
+package com.cheng.plugins;
 
 import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.project.Project;

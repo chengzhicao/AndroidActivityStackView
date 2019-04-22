@@ -1,0 +1,27 @@
+<idea-plugin>
+    <id>com.cheng.plugins.ActivityStackView</id>
+    <name>Activity Stack View</name>
+    <vendor email="chengzhicao1201@gmail.com"/>
+
+    <description><![CDATA[
+    Android Activity Stack 可查看Activity的堆栈层次结构、当前Activity，Activity的启动方式
+    ]]></description>
+
+    <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
+         on how to target different products -->
+    <!-- uncomment to enable plugin in all products
+    <depends>com.intellij.modules.lang</depends>
+    -->
+
+    <extensions defaultExtensionNs="com.intellij">
+        <defaultProjectTypeProvider type="Android"/>
+        <toolWindow anchor="right"
+                    id="Android Activity stack"
+                    factoryClass="com.cheng.plugins.ActivityStackWindow"
+        />
+    </extensions>
+
+    <actions>
+        <!-- Add your actions here -->
+    </actions>
+</idea-plugin>
