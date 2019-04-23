@@ -10,8 +10,10 @@ import java.util.*;
 
 public class DeviceService {
     private AndroidDebugBridge debugBridge;
+    private Project project;
 
     public DeviceService(Project project) {
+        this.project = project;
         debugBridge = AndroidSdkUtils.getDebugBridge(project);
     }
 
@@ -30,6 +32,11 @@ public class DeviceService {
             if (devicesListener != null) {
                 devicesListener.findDevices(devices);
             }
+        } else {
+            debugBridge = AndroidSdkUtils.getDebugBridge(project);
+            if (devicesListener != null) {
+                devicesListener.adbNotFind();
+            }
         }
     }
 
@@ -41,5 +48,7 @@ public class DeviceService {
 
     public interface DevicesListener {
         void findDevices(IDevice[] devices);
+
+        void adbNotFind();
     }
 }

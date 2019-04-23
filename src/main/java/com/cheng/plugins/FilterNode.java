@@ -34,11 +34,6 @@ public class FilterNode {
     private static final String DISPLAY_4 = "mLockTaskModeState=";
     private static final String DISPLAY_5 = "mLockTaskModeTasks";
 
-//    public static final String[] DISPLAYS = {DISPLAY_1, DISPLAY_2, DISPLAY_3, DISPLAY_4, DISPLAY_5};
-//    public static final String[] TASKS = {TASK_1, TASK_2, TASK_3, TASK_4, TASK_5, TASK_6};
-//    public static final String[] HISTS = {HIST_1, HIST_2, HIST_3, HIST_4, HIST_5,
-//            HIST_6, HIST_7, HIST_8, HIST_9, HIST_10,
-//            HIST_11, HIST_12, HIST_13, HIST_14, HIST_15};
     public static final String[] ALL = {DISPLAY_1, DISPLAY_2, DISPLAY_3, DISPLAY_4, DISPLAY_5,
             TASK_1, TASK_2, TASK_3, TASK_4, TASK_5, TASK_6,
             HIST_1, HIST_2, HIST_3, HIST_4, HIST_5,

@@ -4,7 +4,7 @@ plugins {
 }
 
 group 'com.cheng.plugins'
-version '1.0-SNAPSHOT'
+version '1.0.0'
 
 repositories {
     mavenCentral()
@@ -19,8 +19,8 @@ intellij {
     version '2019.1'
     plugins 'android'
 }
-patchPluginXml {
-    changeNotes """
-      Add change notes here.<br>
-      <em>most HTML tags may be used</em>"""
-}
+//patchPluginXml {
+//    changeNotes """
+//      Add change notes here.<br>
+//      <em>most HTML tags may be used</em>"""
+//}

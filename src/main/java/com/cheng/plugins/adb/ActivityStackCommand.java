@@ -22,7 +22,7 @@ public class ActivityStackCommand {
     private static String temp;
 
     public static List<DefaultMutableTreeNode> getActivityDumps2(IDevice device) {
-
+        activityDumps.clear();
         try {
             device.executeShellCommand("dumpsys activity activities", new AndroidOutputReceiver() {
                 @Override

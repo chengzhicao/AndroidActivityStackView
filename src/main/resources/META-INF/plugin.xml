@@ -1,10 +1,10 @@
 <idea-plugin>
-    <id>com.cheng.plugins.ActivityStackView</id>
+    <id>com.cheng.plugins.activitystackview</id>
     <name>Activity Stack View</name>
-    <vendor email="chengzhicao1201@gmail.com"/>
+    <vendor email="chengzhicao1201@gmail.com" url="https://github.com/chengzhicao"/>
 
     <description><![CDATA[
-    Android Activity Stack 可查看Activity的堆栈层次结构、当前Activity，Activity的启动方式
+    View the stack and properties of the Android Activity in the form of a tree
     ]]></description>
 
     <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
@@ -18,7 +18,7 @@
     <extensions defaultExtensionNs="com.intellij">
         <defaultProjectTypeProvider type="Android"/>
         <toolWindow anchor="right"
-                    id="Android Activity stack"
+                    id="Activity Stack View"
                     factoryClass="com.cheng.plugins.ActivityStackWindow"
         />
     </extensions>

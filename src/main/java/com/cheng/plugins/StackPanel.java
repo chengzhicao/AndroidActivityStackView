@@ -38,6 +38,7 @@ public class StackPanel extends SimpleToolWindowPanel implements DeviceService.D
     private final BackAction backAction = new BackAction();
     private final RefreshAction refreshAction = new RefreshAction();
     private final FilterAction filterAction = new FilterAction();
+    private JPanel noAdbPanel;
 
     StackPanel(@NotNull Project project) {
         super(true, true);
@@ -62,7 +63,7 @@ public class StackPanel extends SimpleToolWindowPanel implements DeviceService.D
 
     private void createNoDevicePanel() {
         noDevicesPanel = new JPanel(new BorderLayout());
-        noDevicesPanel.add(new JLabel("no find devices", JLabel.CENTER), BorderLayout.CENTER);
+        noDevicesPanel.add(new JLabel("not found devices", JLabel.CENTER), BorderLayout.CENTER);
     }
 
     private void refreshTree() {
@@ -111,7 +112,7 @@ public class StackPanel extends SimpleToolWindowPanel implements DeviceService.D
         group.add(backAction);
         group.add(refreshAction);
         group.add(filterAction);
-        ActionToolbar actionToolBar = ActionManager.getInstance().createActionToolbar("fwegwef", group, true);
+        ActionToolbar actionToolBar = ActionManager.getInstance().createActionToolbar("ActivityStackViewToolbar", group, true);
         return JBUI.Panels.simplePanel(actionToolBar.getComponent());
     }
 
@@ -141,6 +142,17 @@ public class StackPanel extends SimpleToolWindowPanel implements DeviceService.D
             if (noDevicesPanel != getContent()) {
                 setContent(noDevicesPanel);
             }
+        }
+    }
+
+    @Override
+    public void adbNotFind() {
+        if (noAdbPanel == null) {
+            noAdbPanel = new JPanel(new BorderLayout());
+            noAdbPanel.add(new JLabel("'adb' command not found. Review your Android SDK installation.", JLabel.CENTER), BorderLayout.CENTER);
+        }
+        if (noAdbPanel != getContent()) {
+            setContent(noAdbPanel);
         }
     }
 
