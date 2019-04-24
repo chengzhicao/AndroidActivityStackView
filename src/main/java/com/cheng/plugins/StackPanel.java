@@ -54,6 +54,7 @@ public class StackPanel extends SimpleToolWindowPanel implements DeviceService.D
     private final RefreshAction refreshAction = new RefreshAction();
     private final FilterAction filterAction = new FilterAction();
     private JPanel noAdbPanel;
+    private JComponent myContent;
 
     StackPanel(@NotNull Project project) {
         super(true, true);
@@ -116,6 +117,17 @@ public class StackPanel extends SimpleToolWindowPanel implements DeviceService.D
         setContent(ScrollPaneFactory.createScrollPane(tree));
     }
 
+    @Override
+    public void setContent(@NotNull JComponent c) {
+        super.setContent(c);
+        myContent = c;
+
+    }
+
+    private JComponent getMyContent() {
+        return myContent;
+    }
+
     private void showAll() {
         Tree tree = new Tree(allTree);
 //        tree.setCellRenderer((tree1, value, selected, expanded, leaf, row, hasFocus) -> new JLabel(value.toString()));
@@ -137,7 +149,7 @@ public class StackPanel extends SimpleToolWindowPanel implements DeviceService.D
         devicesTableModel.updateDevice(devices);
         if (devices.length > 0) {
             if (shouldShowDevice) {
-                if (devicePanel != getContent()) {
+                if (devicePanel != getMyContent()) {
                     setContent(devicePanel);
                 }
             } else {
@@ -154,7 +166,7 @@ public class StackPanel extends SimpleToolWindowPanel implements DeviceService.D
                 }
             }
         } else {
-            if (noDevicesPanel != getContent()) {
+            if (noDevicesPanel != getMyContent()) {
                 setContent(noDevicesPanel);
             }
         }
@@ -166,7 +178,7 @@ public class StackPanel extends SimpleToolWindowPanel implements DeviceService.D
             noAdbPanel = new JPanel(new BorderLayout());
             noAdbPanel.add(new JLabel("'adb' command not found. Review your Android SDK installation.", JLabel.CENTER), BorderLayout.CENTER);
         }
-        if (noAdbPanel != getContent()) {
+        if (noAdbPanel != getMyContent()) {
             setContent(noAdbPanel);
         }
     }

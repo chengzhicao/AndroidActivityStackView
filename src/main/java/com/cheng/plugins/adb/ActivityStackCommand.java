@@ -59,7 +59,7 @@ public class ActivityStackCommand {
                             spaceCount++;
                         }
                         createTree(spaceCount, line);
-                        System.out.println((spaceCount < 10 ? ("0" + spaceCount) : spaceCount) + ">" + line);
+//                        System.out.println((spaceCount < 10 ? ("0" + spaceCount) : spaceCount) + ">" + line);
                     }
                 }
 
