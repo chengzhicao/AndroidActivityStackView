@@ -13,9 +13,10 @@
     <depends>com.intellij.modules.lang</depends>
     -->
 
-    <idea-version since-build="131"/>
+    <idea-version since-build="193"/>
 
     <depends>org.jetbrains.android</depends>
+    <depends>com.intellij.modules.platform</depends>
 
     <extensions defaultExtensionNs="com.intellij">
         <defaultProjectTypeProvider type="Android"/>
